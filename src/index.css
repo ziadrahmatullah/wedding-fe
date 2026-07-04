@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #fff7f5;
+  --color-primary: #c97b84;
+  --color-primary-dark: #9c4f58;
+  --color-accent-gold: #c9a66b;
+  --color-surface: #ffffff;
+  --color-text: #4a2e30;
+  --color-text-soft: #8c6a6d;
+
+  --font-display: "Great Vibes", cursive;
+  --font-script: "Dancing Script", cursive;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-arabic: "Amiri", serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes arch-draw {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+.arch-draw {
+  animation: arch-draw 1.6s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arch-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+/* iOS Safari momentum scrolling inside the nested scroll-snap container. */
+.snap-y {
+  -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * Ornament SVGs (tagged data-ornament) keep a uniform on-screen stroke width
+ * no matter how each viewBox is scaled — see src/svg/tokens.ts.
+ */
+svg[data-ornament] * {
+  vector-effect: non-scaling-stroke;
+}
