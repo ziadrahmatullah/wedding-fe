@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { motion, useAnimation, useReducedMotion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 interface PhotoCarouselProps {
@@ -9,61 +9,103 @@ interface PhotoCarouselProps {
 }
 
 /**
- * Swipeable horizontal carousel, one full-size item per slide with a
- * position indicator ("2/5"). Snap-scroll driven — no drag gesture library
- * needed, native touch scrolling handles the swipe.
+ * Swipeable horizontal carousel. Slides are ~88% width with a visible gap so
+ * neighboring photos peek in from the edges — that peek is what actually
+ * teaches users "this scrolls", far more than the dot row does on its own.
+ * Snap-scroll driven (native touch scrolling), with an IntersectionObserver
+ * tracking which slide is centered rather than hand-rolled scrollLeft math,
+ * since that math gets fragile once slides aren't full-width.
  */
 export function PhotoCarousel({ count, renderItem, className }: PhotoCarouselProps) {
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const hasNudgedRef = useRef(false);
+  const nudgeControls = useAnimation();
+  const reduceMotion = useReducedMotion();
 
-  function handleScroll() {
+  useEffect(() => {
     const track = trackRef.current;
-    if (!track) return;
-    const slideWidth = track.clientWidth;
-    const next = Math.round(track.scrollLeft / slideWidth);
-    setIndex(Math.min(Math.max(next, 0), count - 1));
-  }
+    if (!track || count === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+            const i = Number((entry.target as HTMLElement).dataset.index);
+            setIndex(i);
+          }
+        }
+      },
+      { root: track, threshold: [0.6] },
+    );
+    slideRefs.current.forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, [count]);
+
+  // One-time "nudge" the first time a multi-photo carousel appears — a
+  // brief shift-and-return that hints "this scrolls" without any text.
+  useEffect(() => {
+    if (count > 1 && !hasNudgedRef.current && !reduceMotion) {
+      hasNudgedRef.current = true;
+      void nudgeControls.start({
+        x: [0, -34, 0],
+        transition: { duration: 0.7, ease: "easeInOut" },
+      });
+    }
+  }, [count, nudgeControls, reduceMotion]);
 
   function goTo(i: number) {
-    const track = trackRef.current;
-    if (!track) return;
-    track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
+    slideRefs.current[i]?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
   }
 
   if (count === 0) return null;
 
   return (
     <div className={className}>
-      <div
+      <motion.div
         ref={trackRef}
-        onScroll={handleScroll}
-        className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        animate={nudgeControls}
+        className="flex snap-x snap-mandatory gap-3.5 overflow-x-auto scroll-smooth px-[6%] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {Array.from({ length: count }, (_, i) => (
-          <div key={i} className="w-full shrink-0 snap-center px-1">
+          <div
+            key={i}
+            ref={(el) => {
+              slideRefs.current[i] = el;
+            }}
+            data-index={i}
+            className="w-[88%] shrink-0 snap-center"
+          >
             {renderItem(i)}
           </div>
         ))}
-      </div>
+      </motion.div>
 
       {count > 1 && (
-        <div className="mt-3 flex items-center justify-center gap-3">
-          <span className="text-xs text-text-soft">
-            {index + 1}/{count}
-          </span>
-          <div className="flex gap-1.5">
-            {Array.from({ length: count }, (_, i) => (
-              <motion.button
-                key={i}
-                type="button"
-                aria-label={`Ke foto ${i + 1}`}
-                onClick={() => goTo(i)}
-                className="h-1.5 rounded-full bg-primary/30"
-                animate={{ width: i === index ? 18 : 6, opacity: i === index ? 1 : 0.5 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              />
-            ))}
+        <div className="mt-3 flex flex-col items-center gap-2">
+          <p className="text-xs text-text-soft">Geser untuk lihat foto lainnya &rarr;</p>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-text-soft">
+              {index + 1}/{count}
+            </span>
+            <div className="flex gap-1.5">
+              {Array.from({ length: count }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Ke foto ${i + 1}`}
+                  onClick={() => goTo(i)}
+                  className={`h-1.5 w-1.5 rounded-full transition-colors duration-200 ${
+                    i === index ? "bg-primary" : "bg-text-soft/30"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}

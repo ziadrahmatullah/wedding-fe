@@ -41,8 +41,8 @@ export function GuestbookPage() {
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const frameRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const frameRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
   const [downloadingAll, setDownloadingAll] = useState(false);
 
   // --- form ---
@@ -147,26 +147,25 @@ export function GuestbookPage() {
     }
   }
 
-  async function handleDownloadOne(photoId: string) {
-    const node = frameRefs.current.get(photoId);
+  async function handleDownloadOne(index: number) {
+    const node = frameRefs.current.get(index);
     if (!node) return;
-    setDownloadingId(photoId);
+    setDownloadingIdx(index);
     try {
       const blob = await captureFrame(node);
-      const idx = photos.findIndex((p) => p.id === photoId);
-      downloadBlob(blob, `kenangan-zainab-ziad-${idx + 1}.png`);
+      downloadBlob(blob, `kenangan-zainab-ziad-${index + 1}.png`);
     } catch {
       setToastMsg("Gagal membuat gambar. Coba lagi.");
     } finally {
-      setDownloadingId(null);
+      setDownloadingIdx(null);
     }
   }
 
-  async function handleDownloadAll() {
+  async function handleDownloadAll(count: number) {
     setDownloadingAll(true);
     try {
-      for (let i = 0; i < photos.length; i++) {
-        const node = frameRefs.current.get(photos[i].id);
+      for (let i = 0; i < count; i++) {
+        const node = frameRefs.current.get(i);
         if (!node) continue;
         const blob = await captureFrame(node);
         downloadBlob(blob, `kenangan-zainab-ziad-${i + 1}.png`);
@@ -242,41 +241,38 @@ export function GuestbookPage() {
               Kenangan &amp; ucapanmu sudah terkirim.
             </p>
 
-            {photos.length > 0 && (
+            {result.images.length > 0 && (
               <>
                 <PhotoCarousel
-                  count={photos.length}
-                  renderItem={(i) => {
-                    const photo = photos[i];
-                    return (
-                      <div className="flex flex-col gap-3">
-                        <SinglePhotoFrame
-                          ref={(el) => {
-                            if (el) frameRefs.current.set(photo.id, el);
-                            else frameRefs.current.delete(photo.id);
-                          }}
-                          src={photo.dataUrl}
-                        />
-                        <Button
-                          variant="secondary"
-                          type="button"
-                          className="w-full"
-                          loading={downloadingId === photo.id}
-                          onClick={() => void handleDownloadOne(photo.id)}
-                        >
-                          Download
-                        </Button>
-                      </div>
-                    );
-                  }}
+                  count={result.images.length}
+                  renderItem={(i) => (
+                    <div className="flex flex-col gap-3">
+                      <SinglePhotoFrame
+                        ref={(el) => {
+                          if (el) frameRefs.current.set(i, el);
+                          else frameRefs.current.delete(i);
+                        }}
+                        src={result.images[i]}
+                      />
+                      <Button
+                        variant="secondary"
+                        type="button"
+                        className="w-full"
+                        loading={downloadingIdx === i}
+                        onClick={() => void handleDownloadOne(i)}
+                      >
+                        Download
+                      </Button>
+                    </div>
+                  )}
                 />
 
-                {photos.length > 1 && (
+                {result.images.length > 1 && (
                   <Button
                     variant="secondary"
                     type="button"
                     loading={downloadingAll}
-                    onClick={() => void handleDownloadAll()}
+                    onClick={() => void handleDownloadAll(result.images.length)}
                   >
                     Download Semua
                   </Button>
