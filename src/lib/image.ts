@@ -4,8 +4,15 @@ export interface CroppedPhoto {
   dataUrl: string;
 }
 
-const MAX_DIMENSION = 1200;
-const JPEG_QUALITY = 0.8;
+// No downscale/compression pass anymore — guests' photos upload at the crop
+// area's native resolution so the stored file keeps the original detail.
+// 4096 is not a quality knob: older iOS Safari silently fails on canvases
+// larger than 4096x4096, so it's a hard ceiling for the crop canvas.
+const MAX_CANVAS_DIMENSION = 4096;
+// 0.95 is visually lossless; the canvas has to re-encode after cropping, so
+// "no compression" in the literal sense (PNG) would triple the upload size
+// with zero visible gain on a photo.
+const JPEG_QUALITY = 0.95;
 
 export function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -26,16 +33,15 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 /**
- * Crop the source image to the given pixel area (from react-easy-crop),
- * downscale to at most 1200px, and compress to JPEG — keeps mobile uploads
- * small before anything is stored in state.
+ * Crop the source image to the given pixel area (from react-easy-crop) at
+ * native resolution — no downscaling, high-quality JPEG re-encode only.
  */
-export async function cropAndCompress(
+export async function cropPhoto(
   imageSrc: string,
   area: { x: number; y: number; width: number; height: number },
 ): Promise<CroppedPhoto> {
   const img = await loadImage(imageSrc);
-  const size = Math.min(Math.round(area.width), MAX_DIMENSION);
+  const size = Math.min(Math.round(area.width), MAX_CANVAS_DIMENSION);
 
   const canvas = document.createElement("canvas");
   canvas.width = size;

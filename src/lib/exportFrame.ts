@@ -7,11 +7,16 @@ import { toBlob } from "html-to-image";
  * rendering, same ornament positions), which a separate Canvas-drawing path
  * could never promise.
  */
-export async function captureFrame(node: HTMLElement): Promise<Blob> {
+export async function captureFrame(node: HTMLElement, pixelRatio = 3): Promise<Blob> {
   // Avoid capturing a fallback font before the calligraphy webfont finishes loading.
   await document.fonts.ready;
 
-  const blob = await toBlob(node, { pixelRatio: 2, cacheBust: true });
+  // pixelRatio 2 looked soft once viewed at full size or shared to a bigger
+  // screen — the capture is only as sharp as the CSS-rendered node (~350-
+  // 400px wide on a phone), so it needs real upscaling headroom. 3x is the
+  // default for on-screen nodes; the off-screen upload capture passes a
+  // higher ratio since that file is stored permanently on the server.
+  const blob = await toBlob(node, { pixelRatio, quality: 1, cacheBust: true });
   if (!blob) throw new Error("capture-failed");
   return blob;
 }

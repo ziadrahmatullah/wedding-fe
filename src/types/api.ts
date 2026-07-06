@@ -40,12 +40,22 @@ export interface RsvpMessagesResponse {
   has_more: boolean;
 }
 
-// POST /guestbook-messages (anonymous venue guestbook, multipart form)
+// POST /guestbook-images — one photo uploaded right after crop, in both
+// versions (plain crop + framed composite), before the form is submitted.
+export interface GuestbookImage {
+  id: number;
+  image_link: string;
+  framed_image_link: string;
+}
+
+// POST /guestbook-messages (anonymous venue guestbook, multipart form).
+// Photos are no longer sent as files here — they're pre-uploaded via
+// /guestbook-images and referenced by id.
 export interface GuestbookPayload {
   fullname: string;
   message?: string;
   voice?: Blob;
-  images: Blob[];
+  imageIds: number[];
 }
 
 export interface GuestbookMessage {

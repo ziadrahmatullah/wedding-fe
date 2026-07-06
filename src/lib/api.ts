@@ -1,6 +1,7 @@
 import axios from "axios";
 import type {
   Guest,
+  GuestbookImage,
   GuestbookMessage,
   GuestbookPayload,
   RsvpPayload,
@@ -47,8 +48,27 @@ export async function readQrcode(qrcode: string): Promise<QrcodeReadResult> {
   return { fullname: res.data.data?.fullname ?? res.data.fullname ?? "Tamu" };
 }
 
-// Anonymous venue guestbook. Multipart keys verified against the live BE:
-// `fullname`, `message`, `voice` (single file), `images` (repeated key).
+// Uploads one photo (crop + framed composite) immediately after cropping,
+// before the guestbook form is submitted — the returned id is referenced
+// later in `image_ids`. The framed blob comes from html-to-image and is PNG.
+export async function uploadGuestbookImage(
+  normalBlob: Blob,
+  framedBlob: Blob,
+): Promise<GuestbookImage> {
+  const form = new FormData();
+  form.append("image", normalBlob, "photo.jpg");
+  form.append("framed_image", framedBlob, "photo-framed.png");
+  const res = await api.post<ApiEnvelope<GuestbookImage> | GuestbookImage>(
+    "/guestbook-images",
+    form,
+  );
+  const body = res.data;
+  return "data" in body ? body.data : body;
+}
+
+// Anonymous venue guestbook. Still multipart because voice is a file, but
+// photos are now sent as `image_ids` (JSON-encoded string) referencing
+// already-uploaded /guestbook-images rows instead of repeated `images` files.
 export async function submitGuestbookMessage(
   payload: GuestbookPayload,
   onProgress?: (percent: number) => void,
@@ -57,7 +77,7 @@ export async function submitGuestbookMessage(
   form.append("fullname", payload.fullname);
   if (payload.message) form.append("message", payload.message);
   if (payload.voice) form.append("voice", payload.voice, "voice.webm");
-  payload.images.forEach((img, i) => form.append("images", img, `photo-${i + 1}.jpg`));
+  form.append("image_ids", JSON.stringify(payload.imageIds));
 
   const res = await api.post<ApiEnvelope<GuestbookMessage>>(
     "/guestbook-messages",
