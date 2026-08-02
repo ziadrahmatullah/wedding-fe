@@ -36,6 +36,8 @@ export function UcapanSection() {
           ) : messages.length === 0 ? (
             <p className="text-center text-sm text-text-soft">
               Belum ada ucapan. Jadilah yang pertama!
+              <br />
+              Ucapan bisa diisi lewat form Konfirmasi Kehadiran.
             </p>
           ) : (
             <ul className="flex flex-col gap-4">

@@ -65,3 +65,7 @@ export interface GuestbookMessage {
   voice_link: string | null;
   images: string[];
 }
+
+export interface QrisPaymentPayload {
+  nama: string;
+}

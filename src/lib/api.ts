@@ -4,6 +4,7 @@ import type {
   GuestbookImage,
   GuestbookMessage,
   GuestbookPayload,
+  QrisPaymentPayload,
   RsvpPayload,
   RsvpMessagesResponse,
   SubmitRsvpResult,
@@ -96,6 +97,10 @@ export async function submitGuestbookMessage(
 export async function fetchGuestbookMessageById(id: string): Promise<GuestbookMessage> {
   const res = await api.get<ApiEnvelope<GuestbookMessage>>(`/guestbook-messages/${id}`);
   return res.data.data;
+}
+
+export async function createQrisPayment(payload: QrisPaymentPayload): Promise<void> {
+  await api.post("/qris-payments", payload);
 }
 
 export async function fetchRsvpMessages(params: {

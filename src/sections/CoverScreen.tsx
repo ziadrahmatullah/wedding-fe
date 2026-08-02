@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../components/Button";
-import { ArchSilhouette } from "../svg/ArchSilhouette";
 import { HeartOrnamentIcon } from "../svg/icons/HeartOrnamentIcon";
 import { STROKE_WIDTH } from "../svg/tokens";
 import { wedding } from "../data/wedding";
@@ -64,8 +63,6 @@ export function CoverScreen({ onOpened }: CoverScreenProps) {
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <ArchSilhouette className="h-24 w-32 text-primary" />
-
           {/* Envelope. The letter travels well above it, so no overflow clipping here. */}
           <motion.div
             className="relative"
