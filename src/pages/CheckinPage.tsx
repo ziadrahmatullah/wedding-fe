@@ -2,6 +2,7 @@ import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
+import QrScanner from "qr-scanner";
 import { readQrcode } from "../lib/api";
 import { FloralDivider } from "../svg/FloralDivider";
 import { wedding } from "../data/wedding";
@@ -61,6 +62,24 @@ function CrossIcon() {
   );
 }
 
+function CameraIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </svg>
+  );
+}
+
 function QrIcon() {
   return (
     <svg
@@ -89,6 +108,9 @@ export function CheckinPage() {
   const silenceTimerRef = useRef<number | null>(null);
   const lastSubmitAtRef = useRef(0);
   const isLoadingRef = useRef(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const clearResetTimer = useCallback(() => {
     if (resetTimerRef.current !== null) {
@@ -163,6 +185,36 @@ export function CheckinPage() {
     },
     [clearResetTimer, clearSilenceTimer, scheduleReset],
   );
+
+  useEffect(() => {
+    if (!cameraOpen || !videoRef.current) return;
+
+    setCameraError(null);
+    const scanner = new QrScanner(
+      videoRef.current,
+      (result) => {
+        scanner.stop();
+        setCameraOpen(false);
+        void submit(result.data);
+      },
+      {
+        preferredCamera: "environment",
+        highlightScanRegion: true,
+        highlightCodeOutline: true,
+      },
+    );
+
+    scanner.start().catch(() => {
+      setCameraError(
+        "Tidak bisa mengakses kamera. Pastikan izin kamera sudah diaktifkan di browser.",
+      );
+    });
+
+    return () => {
+      scanner.stop();
+      scanner.destroy();
+    };
+  }, [cameraOpen, submit]);
 
   function handleChange(value: string) {
     setBuffer(value);
@@ -319,7 +371,50 @@ export function CheckinPage() {
         <p className="mt-2 text-center text-xs text-text-soft">
           Input selalu aktif — hasil scan diproses otomatis, tidak perlu klik apapun.
         </p>
+
+        <button
+          type="button"
+          onClick={() => setCameraOpen(true)}
+          className="mx-auto mt-4 flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-dark"
+        >
+          <CameraIcon />
+          Scan dari Kamera Belakang HP
+        </button>
       </footer>
+
+      <AnimatePresence>
+        {cameraOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/90 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <p className="text-center text-sm text-white/80">
+              Arahkan kamera ke QR code undangan
+            </p>
+            <video
+              ref={videoRef}
+              className="max-h-[65svh] w-full max-w-md rounded-2xl object-cover"
+              muted
+              playsInline
+            />
+            {cameraError && (
+              <p className="max-w-sm text-center text-sm text-red-300">
+                {cameraError}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => setCameraOpen(false)}
+              className="rounded-full border border-white/40 px-6 py-2 text-sm text-white hover:bg-white/10"
+            >
+              Tutup Kamera
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
