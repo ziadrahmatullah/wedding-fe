@@ -25,7 +25,7 @@ export const wedding = {
   },
   resepsi: {
     label: "Resepsi",
-    time: "12:45",
+    time: "10:00",
     floor: "Lantai 1",
   },
   venue: {
