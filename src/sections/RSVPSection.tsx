@@ -25,6 +25,11 @@ const STATUS_TEXT: Record<RsvpStatus, string> = {
   unsure: "Belum Tau",
 };
 
+const BANK_ACCOUNTS = [
+  { bank: "BCA", number: "8990862819", holder: "Muhammad Ziad Rahmatullah" },
+  { bank: "Seabank", number: "901663407152", holder: "Zainab" },
+];
+
 function QrConfirmation({
   guest,
   emailNotice,
@@ -77,6 +82,17 @@ export function RSVPSection() {
   const [qrisSubmitting, setQrisSubmitting] = useState(false);
   const [qrisError, setQrisError] = useState<string | null>(null);
   const [qrisShown, setQrisShown] = useState(false);
+  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
+
+  async function copyAccountNumber(number: string) {
+    try {
+      await navigator.clipboard.writeText(number);
+      setCopiedAccount(number);
+      setTimeout(() => setCopiedAccount(null), 2000);
+    } catch {
+      // clipboard unavailable; ignore
+    }
+  }
 
   function openAmplop() {
     setAmplopStep("options");
@@ -273,14 +289,47 @@ export function RSVPSection() {
           ))}
 
         {amplopStep === "bank" && (
-          <div className="flex flex-col gap-2 text-center">
-            <h3 className="font-script text-xl text-primary-dark">
+          <div className="flex flex-col gap-4">
+            <h3 className="text-center font-script text-xl text-primary-dark">
               Transfer Bank
             </h3>
-            <p className="mt-2 text-lg font-medium text-text">8990862819</p>
-            <p className="text-sm text-text-soft">
-              BCA a.n Muhammad Ziad Rahmatullah
-            </p>
+            {BANK_ACCOUNTS.map((account) => (
+              <div
+                key={account.number}
+                className="flex flex-col items-center gap-2 rounded-lg border border-accent-gold/30 px-4 py-3 text-center"
+              >
+                <p className="text-xs text-text-soft">{account.bank}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-medium text-text">
+                    {account.number}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => copyAccountNumber(account.number)}
+                    aria-label="Salin nomor rekening"
+                    className="rounded-full border border-primary/40 p-1.5 text-primary-dark transition-colors hover:bg-primary/5"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
+                      className="h-4 w-4"
+                    >
+                      <rect x="9" y="9" width="12" height="12" rx="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  </button>
+                </div>
+                <p className="text-sm text-text-soft">
+                  a.n {account.holder}
+                </p>
+                {copiedAccount === account.number && (
+                  <p className="text-xs text-primary">Tersalin!</p>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </Popup>
