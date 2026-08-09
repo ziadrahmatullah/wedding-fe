@@ -30,6 +30,9 @@ const BANK_ACCOUNTS = [
   { bank: "Seabank", number: "901663407152", holder: "Zainab" },
 ];
 
+const GIFT_ADDRESS =
+  "Gang Ks Blok Kaliwon, RT.5/RW.2, Desa Windujanten, Kadugede no. 252, Kab. Kuningan, Kadugede, Jawa Barat, ID, 45561";
+
 function QrConfirmation({
   guest,
   emailNotice,
@@ -215,6 +218,21 @@ export function RSVPSection() {
             >
               Amplop Digital
             </Button>
+
+            <Card className="mt-6 text-center">
+              <p className="font-script text-lg text-primary-dark">
+                Alamat Pengiriman Hadiah
+              </p>
+              <p className="mt-2 text-sm text-text-soft">{GIFT_ADDRESS}</p>
+              <a
+                href="https://maps.app.goo.gl/FpAqdDWZkpx97e1x8?g_st=aw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/40 bg-surface px-6 py-3 font-sans text-sm font-medium text-primary-dark transition-colors hover:bg-primary/5"
+              >
+                Buka di Google Maps
+              </a>
+            </Card>
           </div>
         </RevealOnScroll>
       </BookPageInner>
