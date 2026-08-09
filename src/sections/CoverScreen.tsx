@@ -1,12 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { Button } from "../components/Button";
+import type { BackgroundMusicHandle } from "../components/BackgroundMusic";
 import { HeartOrnamentIcon } from "../svg/icons/HeartOrnamentIcon";
 import { STROKE_WIDTH } from "../svg/tokens";
 import { wedding } from "../data/wedding";
 
 interface CoverScreenProps {
   onOpened: () => void;
+  musicRef: RefObject<BackgroundMusicHandle | null>;
 }
 
 type Phase = "closed" | "opening" | "hidden";
@@ -34,7 +37,7 @@ const FLAP_EASE = [0.34, 1.56, 0.64, 1] as const;
  *              slightly like a hand-pulled card, shadow deepening as it lifts
  *   1.25       cover starts its exit fade (overlapping the Hero behind it)
  */
-export function CoverScreen({ onOpened }: CoverScreenProps) {
+export function CoverScreen({ onOpened, musicRef }: CoverScreenProps) {
   const [phase, setPhase] = useState<Phase>("closed");
   const [flapBehind, setFlapBehind] = useState(false);
   const timersRef = useRef<number[]>([]);
@@ -46,6 +49,7 @@ export function CoverScreen({ onOpened }: CoverScreenProps) {
 
   function handleOpen() {
     if (phase !== "closed") return;
+    musicRef.current?.play();
     setPhase("opening");
     timersRef.current.push(
       window.setTimeout(() => setFlapBehind(true), 300),

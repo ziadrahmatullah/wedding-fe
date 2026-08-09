@@ -1,6 +1,8 @@
 import { MotionConfig } from "framer-motion";
 import { useRef, useState } from "react";
 import { AyatSection } from "./sections/AyatSection";
+import { BackgroundMusic } from "./components/BackgroundMusic";
+import type { BackgroundMusicHandle } from "./components/BackgroundMusic";
 import { CoverScreen } from "./sections/CoverScreen";
 import { Countdown } from "./sections/Countdown";
 import { EventDetail } from "./sections/EventDetail";
@@ -15,6 +17,7 @@ import { SubtlePattern } from "./svg/SubtlePattern";
 function App() {
   const [opened, setOpened] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const musicRef = useRef<BackgroundMusicHandle>(null);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -51,7 +54,10 @@ function App() {
         </ScrollContainerContext.Provider>
       </div>
 
-      {!opened && <CoverScreen onOpened={() => setOpened(true)} />}
+      {!opened && (
+        <CoverScreen onOpened={() => setOpened(true)} musicRef={musicRef} />
+      )}
+      <BackgroundMusic ref={musicRef} visible={opened} />
     </MotionConfig>
   );
 }

@@ -47,7 +47,8 @@ export function EventDetail() {
                 {wedding.resepsi.label}
               </h3>
               <p className="mt-1 text-sm text-text">
-                {dateLabel} &middot; {wedding.resepsi.time} WIB
+                {dateLabel} &middot; {wedding.resepsi.time}&ndash;
+                {wedding.resepsi.endTime} WIB
               </p>
               <p className="text-sm text-text-soft">{wedding.resepsi.floor}</p>
             </Card>

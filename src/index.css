@@ -52,6 +52,16 @@ html {
   }
 }
 
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3.5s linear infinite;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);
